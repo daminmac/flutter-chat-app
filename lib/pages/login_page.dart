@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:messenger/widgets/widgets.dart';
+import 'package:messenger/services/services.dart';
+import 'package:messenger/helpers/mostrar_alerta.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -19,7 +22,10 @@ class LoginPage extends StatelessWidget {
               children: <Widget>[
                 const Logo(titulo: 'Messenger'),
                 _Form(),
-                const Labels(ruta: 'register', tienesCuenta: '¿No tienes una Cuenta?', creaOEntra: 'Crea una ahora'),
+                const Labels(
+                    ruta: 'register',
+                    tienesCuenta: '¿No tienes una Cuenta?',
+                    creaOEntra: 'Crea una ahora'),
                 _Terminos(),
               ],
             ),
@@ -41,6 +47,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -60,13 +68,26 @@ class __FormState extends State<_Form> {
             textController: passCtrl,
             isPassword: true,
           ),
-
-          // TODO: Crear botón
           BotonAzul(
             text: 'Entrar',
-            onPressed: () {
-              
-            },
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+
+                    final loginOk = await authService.login(
+                        emailCtrl.text.trim(), passCtrl.text.trim());
+
+                    if (loginOk) {
+                      // TODO: Conectar a nuestro socket server
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      // mostrar alerta
+                      // ignore: use_build_context_synchronously
+                      mostrarAlerta(context, 'Login incorrecto',
+                          'Revise sus credenciales nuevamente');
+                    }
+                  },
           ),
         ],
       ),

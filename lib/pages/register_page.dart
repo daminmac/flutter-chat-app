@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:messenger/helpers/mostrar_alerta.dart';
+import 'package:provider/provider.dart';
 
 import 'package:messenger/widgets/widgets.dart';
+import 'package:messenger/services/services.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -19,7 +22,11 @@ class RegisterPage extends StatelessWidget {
               children: <Widget>[
                 const Logo(titulo: 'Registro'),
                 _Form(),
-                const Labels(ruta: 'login', tienesCuenta: '¿Ya estás registrado?', creaOEntra: 'Entra con tu cuenta',),
+                const Labels(
+                  ruta: 'login',
+                  tienesCuenta: '¿Ya estás registrado?',
+                  creaOEntra: 'Entra con tu cuenta',
+                ),
                 _Terminos(),
               ],
             ),
@@ -42,6 +49,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -64,11 +73,23 @@ class __FormState extends State<_Form> {
             textController: passCtrl,
             isPassword: true,
           ),
-
-          // TODO: Crear botón
           BotonAzul(
-            text: 'Entrar',
-            onPressed: () {},
+            text: 'Crear cuenta',
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    final registroOk = await authService.register(
+                        nameCtrl.text.trim(),
+                        emailCtrl.text.trim(),
+                        passCtrl.text.trim());
+
+                    if (registroOk == true) {
+                      // TODO: Conectar socket server
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      mostrarAlerta(context, 'Registro incorrecto', registroOk);
+                    }
+                  },
           ),
         ],
       ),
